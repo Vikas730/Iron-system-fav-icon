@@ -1,0 +1,229 @@
+<div *ngIf="!(jobOrderSfdcId || applicationSfdcId || _taskFilterObject)" [class.row]="!recruitmentMessagingTab" [class.job-message-console]="allMilestoneTaskTab" [class.hidePadding]="hidePadding"> 
+  <div [class.col-12]="!sidebarMenuOpened" 
+  [class.col-9]="sidebarMenuOpened"  [class.main-container]="allMilestoneTaskTab && !sidebarMenuOpened" [class.rightPadding]="sidebarMenuOpened" 
+  [class.pr-0]="((!viewAsVendor && accessType === 'vendor' && userTypeSlug === 'admin') || (viewAsVendor && vendorAccessTypes && vendorAccessTypes.userTypeSlug === 'admin')) || (jobOrderSfdcId || applicationSfdcId || _taskFilterObject)" [class.paddingFromTop]="fromChatBoard">
+  <!-- <div [style.width]="isShowLeftFilters ? 'calc(100% - 197px)': 'calc(100%)'"> -->
+    <ngb-tabset #t="ngbTabset" type="tabs" class="chat-sidebar-head"
+ (tabChange)="onTabChange($event)">
+
+      <!-- All Task from help desk for VMSA -->
+      <!-- <ngb-tab id="vmsaalltask" *ngIf="(((!viewAsVendor && accessType === 'vendor' && userTypeSlug === 'admin') || (viewAsVendor && vendorAccessTypes && vendorAccessTypes.userTypeSlug === 'admin')) && allMilestoneTaskTab) || (jobOrderSfdcId || applicationSfdcId || _taskFilterObject)"> -->
+        <ngb-tab id="vmsaalltask" *ngIf="(((viewAsVendor && vendorAccessTypes && vendorAccessTypes.userTypeSlug === 'admin')) && allMilestoneTaskTab) || (jobOrderSfdcId || applicationSfdcId || _taskFilterObject)">
+        <ng-template ngbTabTitle>All Tasks
+        </ng-template>
+        <ng-template ngbTabContent>
+          <div class="mangerTabsContent">
+            <app-tasks [milestone]="null" [refreshList]="false" [scrollToViewTask]="false"
+              [filterCondition]='_filterCondition' (taskEmitted)="taskEmitted($event)" [viewTypeData]="viewType"
+              (cancel)="onTaskDetailCancel(true)" (pagerClicked)="onScrollToTaskList()" [jobOrderSfdcId]="jobOrderSfdcId" [applicationSfdcId]="applicationSfdcId"
+              [taskFilterObject]="_taskFilterObject">
+            </app-tasks>
+
+            <!-- <div class="accordian-row">
+              <div class="accordianContent"> -->
+            <ngb-tabset [activeId]="activeTabTaskDetailView" type="tabs" justify="fill" #tabset3 
+            [class.sm-tabs]="!(jobOrderSfdcId || applicationSfdcId || _taskFilterObject)" *ngIf="modelId" (tabChange)="onTabChangeTaskDetailView($event)">
+              <ngb-tab id="viewTask" title="View Task">
+                <ng-template ngbTabContent>
+                  <div class="managerTabsWrapper">
+                    <app-task-detail-readonly [task]="task"></app-task-detail-readonly>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+
+              <ngb-tab id="globalChats" title="Global Chat 2.0(Task/Job)">
+                <ng-template ngbTabContent>
+                  <div class="managerTabsWrapper">                    
+                    <app-task-conversation-home [modelId]="modelId"  [allMilestoneTaskTab]="false">
+                    </app-task-conversation-home>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+
+              <ngb-tab id="fileUpload" title="File Manager (Task/Job) ({{documentsCount}})">
+                <ng-template ngbTabContent>
+                  <div class="managerTabsWrapper" *ngIf='updateDocumentList'>
+                    <app-document-list [modelNames]='modelNames' [modelIds]="modelIds" [commonData]="commonData"
+                      [from]="'Task'" [documentsCount]='documentsCount' (docCountUpdated)="getDocumentsCount()"
+                      [refreshFiles]="refreshFiles.asObservable()" [timeZone]="timeZone"
+                      [accountName]="task.Task_acccount_program_job" [programName]="task.Program_Name">
+                    </app-document-list>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+
+            </ngb-tabset>
+            <!-- </div>
+            </div> -->
+          </div>
+        </ng-template>
+      </ngb-tab>
+
+      <!-- All Task Conversation list -->
+      <ngb-tab id="alltask" *ngIf="(!allMilestoneTaskTab || (!viewAsVendor && accessType === 'internal') || (accessType === 'vendor'  && userTypeSlug === 'admin')) && !(jobOrderSfdcId || applicationSfdcId || _taskFilterObject)">
+          <ng-template ngbTabTitle>All{{consoleType === 'OKR'? ' KR': ''}} Conversation
+          <span *ngIf="taskNumber">({{taskNumber}})</span>
+        </ng-template>
+        <ng-template ngbTabContent>
+          <div class="chat-msg-wrap">
+            <div class="console-list">
+              <app-task-conversation-list [fromChatBoard]="fromChatBoard" [modelId]="modelId" [enableFilters]="enableFilters" [isPinningEnabled]="true"
+                [selectedTab]="activeTab" [filterData]="filterCondition ? filterCondition : filterData" (selected)="onSelectedItem($event)"
+                (favUpdated)="onUpdatingFavourite($event)" [consoleType]="consoleType">
+              </app-task-conversation-list>
+            </div>
+            <div class="console-details">
+              <app-task-conversation-details *ngIf="selectedItem" [fromChatBoard]="fromChatBoard" [taskDetails]="taskDetails" [modelId]="modelId"
+                [selectedItem]="selectedItem" [consoleType]="consoleType" [showCaseMessaging]="showCaseMessaging"
+              ></app-task-conversation-details>
+            </div>
+          </div>
+        </ng-template>
+      </ngb-tab>
+
+      <!-- My Task Conversation list -->
+      <ngb-tab id="mytask" *ngIf="(!allMilestoneTaskTab || (!viewAsVendor && accessType === 'internal')) && !(jobOrderSfdcId || applicationSfdcId || _taskFilterObject)">
+        <ng-template ngbTabTitle>My{{consoleType === 'OKR'? ' KR': ''}} Conversation List
+          <span *ngIf="taskNumber">({{taskNumber}})</span>
+        </ng-template>
+        <ng-template ngbTabContent>
+          <div class="chat-msg-wrap">
+            <div class="console-list">
+              <app-task-conversation-list [fromChatBoard]="fromChatBoard" [modelId]="modelId" [enableFilters]="enableFilters" [selectedTab]="activeTab"
+                [filterData]="filterCondition ? filterCondition : filterData" (selected)="onSelectedItem($event)" [isPinningEnabled]="false"
+                (favUpdated)="onUpdatingFavourite($event)" [consoleType]="consoleType">
+              </app-task-conversation-list>
+            </div>
+            <div class="console-details">
+              <app-task-conversation-details *ngIf="selectedItem" [fromChatBoard]="fromChatBoard" [taskDetails]="taskDetails" [modelId]="modelId"
+                [selectedItem]="selectedItem" [consoleType]="consoleType" [showCaseMessaging]="showCaseMessaging"
+              ></app-task-conversation-details>
+            </div>
+          </div>
+        </ng-template>
+      </ngb-tab>
+
+      <!-- My Favorit Conversation list -->
+      <ngb-tab id="favtask" *ngIf="(!allMilestoneTaskTab || (!viewAsVendor && accessType === 'internal')) && !(jobOrderSfdcId || applicationSfdcId || _taskFilterObject)">
+        <ng-template ngbTabTitle>My Favourite{{consoleType === 'OKR'? ' KR': ''}} Conversation List
+          <span *ngIf="taskNumber">({{taskNumber}})</span>
+        </ng-template>
+        <ng-template ngbTabContent>
+          <div class="chat-msg-wrap">
+            <div class="console-list">
+              <app-task-conversation-list [fromChatBoard]="fromChatBoard" [modelId]="modelId" [enableFilters]="enableFilters" [selectedTab]="activeTab"
+                [isPinningEnabled]="false" [filterData]="filterCondition ? filterCondition : filterData" (selected)="onSelectedItem($event)"
+                (favUpdated)="onUpdatingFavourite($event)" [refresh]="refreshFavList" [consoleType]="consoleType">
+              </app-task-conversation-list>
+            </div>
+            <div class="console-details">
+              <app-task-conversation-details *ngIf="selectedItem" [fromChatBoard]="fromChatBoard" [taskDetails]="taskDetails" [modelId]="modelId" [selectedtab]="'favtask'"
+                [selectedItem]="selectedItem" [consoleType]="consoleType" [showCaseMessaging]="showCaseMessaging">
+              </app-task-conversation-details>
+            </div>
+          </div>
+        </ng-template>
+      </ngb-tab>
+
+      <!-- Escalation Task Conversation list -->
+      <ngb-tab id="escalationTask" *ngIf="(!viewAsVendor && accessType !== 'vendor' ) && !(jobOrderSfdcId || applicationSfdcId || _taskFilterObject) && !enableGC3Tabs">
+        <ng-template ngbTabTitle>Escalation Conversation
+          <span *ngIf="taskNumber">({{taskNumber}})</span>
+        </ng-template>
+        <ng-template ngbTabContent>
+          <div class="underDevelopment" *ngIf="modelId">
+            Under Development
+          </div>
+          <div class="chat-msg-wrap" *ngIf="!modelId">
+            <div class="console-list">
+              <app-task-conversation-list [fromChatBoard]="fromChatBoard" [modelId]="modelId" [enableFilters]="enableFilters" [isPinningEnabled]="true"
+                [selectedTab]="activeTab" [filterData]="filterCondition ? filterCondition : filterData" (selected)="onSelectedItem($event)"
+                (favUpdated)="onUpdatingFavourite($event)">
+              </app-task-conversation-list>
+            </div>
+            <div class="console-details">
+              <app-task-conversation-details *ngIf="selectedItem" [fromChatBoard]="fromChatBoard" [taskDetails]="taskDetails" [modelId]="modelId"
+                [selectedItem]="selectedItem" [consoleType]="consoleType" [showCaseMessaging]="showCaseMessaging"
+              ></app-task-conversation-details>
+            </div>
+          </div>
+        </ng-template>
+      </ngb-tab>
+    </ngb-tabset>
+</div>
+  <!-- Edit task view modal Starts -->
+<ng-template #editTaskPopup let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">Edit Task</h4>
+    <button type="button" class="close" aria-label="Close" (click)="closeModelView()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <app-task-detail [milestone] = "selectedItem?.task?.milestone" [task]="selectedItem?.task" [isEdit]="true" (cancel)="closeModelView()" 
+    (scrollToViewTask)="closeOnUpdateTask($event)">
+    </app-task-detail>
+  </div>
+</ng-template>
+
+<!-- Task file manager view modal Starts -->
+<ng-template #taskFileManagerPopup let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">{{headerNameForFilesTab}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="closeModelView()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" *ngIf='updateDocumentList'>
+    <app-document-list [modelIds]="modelIds" [from]="'Task'" [modelNames]='modelNames' 
+     [refreshFiles]="refreshFiles.asObservable()" [commonData]="commonData" [hideClassForTask]="hideClassForTask"
+     [from]="'Task'" [documentsCount]='documentsCount' [fileManager]="fileManager" (docCountUpdated)="getDocumentsCount()"
+     [refreshFiles]="refreshFiles.asObservable()" [timeZone]="timeZone" [accountName]="selectedItem.Task_acccount_program_job" [programName]="selectedItem.Program_Name"
+      >
+</app-document-list>
+  </div>
+</ng-template>
+
+<!-- Parent Task Detail view modal Starts -->
+<ng-template #parentTaskDetailPopup let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">Parent Task Detail</h4>
+    <button type="button" class="close" aria-label="Close" (click)="closeModelView()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <!-- <app-task-detail-readonly [task]="{sfdcId: this.selectedItem.task.Parent_Escalated_Task__c}"></app-task-detail-readonly> -->
+    <app-problem-task-detail-readonly [task]="this.selectedItem.task">
+    </app-problem-task-detail-readonly>
+  </div>
+</ng-template>
+
+  <!--This is for right side bar-->
+  <div class="col-3 fix-right-sidebar" *ngIf="!(modelId || jobOrderSfdcId ||applicationSfdcId || enableGC3Tabs || _taskFilterObject || (accessType === 'vendor'  && userTypeSlug === 'admin'))">
+    <app-right-sidebar [fromDashboard]="false" (appliedFilter)="onAppliedFilter($event)" [selectedTask]="selectedItem"
+      [visibleMenuOptions]="visibleMenuOptions" (sidebarAction)="onRightMenuOpened($event)" (openEditView)="openTaskEditView($event)"
+      (openMyTeamTaskView)="filterTableData($event)" (openTaskMangerView) ="openTaskMangerView($event)" (openParentTaskView)="openParentTaskView($event)"
+      [(currentMenuOption)]="currentMenuOption" [enableFilters]="enableFilters" [myGlobalTask]="leftFilterData"
+      [filterOptions]="filterOptions"
+      [currentPage]="'globalTaskConversation'">
+    </app-right-sidebar>
+  </div>
+</div>
+
+<div *ngIf="(jobOrderSfdcId || applicationSfdcId || _taskFilterObject) && tasksList && tasksList.length">
+  <div class="chat-msg-wrap">
+    <div class="console-list">
+      <app-task-conversation-list [selectedTab]="'alltask'" [filterData]="filterCondition ? filterCondition : filterData" [tasksList]="tasksList" [forRecruitmentJobs]="true" (selected)="onSelectedItem($event)" (favUpdated)="onUpdatingFavourite($event)"></app-task-conversation-list>
+    </div>
+    <div class="console-details">
+      <app-task-conversation-details [tasksList]="tasksList" *ngIf="selectedItem" [selectedItem]="selectedItem"
+        [showCaseMessaging]="showCaseMessaging"
+      ></app-task-conversation-details>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="(jobOrderSfdcId || applicationSfdcId || _taskFilterObject) && !(tasksList && tasksList.length)">
+  <div style="text-align:center;padding:100px 0;">No Task Available</div>
+</div>
